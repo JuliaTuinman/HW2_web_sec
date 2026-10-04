@@ -1,0 +1,39 @@
+--- /dev/null
++++ csp3/middleware.ts
+@@ -0,0 +1,36 @@
++import { NextRequest, NextResponse } from 'next/server';
++
++// CSP 3.0 (nonce-based) policy.
++// A fresh random nonce is generated for every request and placed in the
++// Content-Security-Policy header. Only <script> tags carrying the matching
++// nonce run; the attacker cannot predict the per-request value, so the
++// injected ECharts payload is refused. 'strict-dynamic' lets a trusted
++// (nonce'd) script load further scripts, and critically there is still no
++// 'unsafe-eval', so the new Function(...) call inside the ECharts parser is
++// blocked as well. Next.js automatically stamps this nonce onto its own
++// framework scripts because it reads it from the CSP header on the request.
++export function middleware(request: NextRequest) {
++  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
++
++  const csp = [
++    "default-src 'self'",
++    `script-src 'nonce-${nonce}' 'strict-dynamic'`,
++    "style-src 'self' 'unsafe-inline'",
++    "img-src 'self' data:",
++    "connect-src 'self'",
++    "object-src 'none'",
++    "base-uri 'none'",
++  ].join('; ');
++
++  const requestHeaders = new Headers(request.headers);
++  requestHeaders.set('x-nonce', nonce);
++  requestHeaders.set('Content-Security-Policy', csp);
++
++  const response = NextResponse.next({ request: { headers: requestHeaders } });
++  response.headers.set('Content-Security-Policy', csp);
++  return response;
++}
++
++export const config = {
++  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
++};

@@ -1,0 +1,39 @@
+--- orig/next.config.js
++++ csp2/next.config.js
+@@ -1,6 +1,33 @@
+ /** @type {import('next').NextConfig} */
++
++// CSP 2.0 policy.
++// The exploit executes because the ECharts parser runs the "config" through
++// new Function(...) (an eval). A CSP whose script-src omits 'unsafe-eval'
++// makes new Function throw, so the injected payload can never run - even
++// against the unpatched code. We also omit 'unsafe-inline' so no inline
++// <script> or javascript: URL can execute, and add connect-src 'self' so the
++// exfil fetch() to the attacker's server is refused as defence-in-depth.
++const csp = [
++  "default-src 'self'",
++  "script-src 'self'",
++  "style-src 'self' 'unsafe-inline'",
++  "img-src 'self' data:",
++  "connect-src 'self'",
++  "object-src 'none'",
++  "base-uri 'none'",
++].join('; ');
++
+ const nextConfig = {
+-  /* config options here */
++  async headers() {
++    return [
++      {
++        source: '/:path*',
++        headers: [
++          { key: 'Content-Security-Policy', value: csp },
++        ],
++      },
++    ];
++  },
+ };
+ 
+-export default nextConfig;
+\ No newline at end of file
++export default nextConfig;

@@ -1,0 +1,15 @@
+--- orig/hooks/useECharts.ts
++++ vuln/hooks/useECharts.ts
+@@ -16,7 +16,11 @@
+  */
+ const parseOption = (optStr: string) => {
+   try {
+-    return new Function(`return ${optStr.trim()}`)();
++    // Treat the chart config as DATA, not code. JSON.parse cannot execute
++    // JavaScript, so an injected fetch()/alert() payload is no longer run -
++    // it just fails to parse and the chart errors out harmlessly. Legitimate
++    // ECharts options are plain JSON objects, so they still render fine.
++    return JSON.parse(optStr.trim());
+   } catch (error) {
+     throw new Error('Invalid ECharts option format');
+   }
