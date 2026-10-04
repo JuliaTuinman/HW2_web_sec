@@ -1,0 +1,43 @@
+--- orig/app.js	
++++ csp3/app.js	
+@@ -2,6 +2,7 @@
+ const path = require('path');
+ const bodyParser = require('body-parser');
+ const fs = require('fs')
++const crypto = require('crypto');
+ const app = express();
+ const bot = require('./bot/bot');
+ 
+@@ -17,7 +18,31 @@
+  * Render the Job Hunting Page
+  */
+ app.get('/', (req, res) => {
+-    res.sendFile(path.join(__dirname, 'public', 'pages', 'index.html'));
++    // CSP 3.0 (nonce-based). Generate a fresh random nonce per request, place
++    // it in the header, and stamp it onto the page's own inline <script> so
++    // that script runs. The attacker's injected javascript: URL has no nonce,
++    // so the browser refuses to execute it.
++    const nonce = crypto.randomBytes(16).toString('base64');
++    res.setHeader(
++        'Content-Security-Policy',
++        `default-src 'self'; ` +
++        `script-src 'nonce-${nonce}' 'strict-dynamic'; ` +
++        `style-src 'self' https://unpkg.com; ` +
++        `img-src 'self' data:; ` +
++        `connect-src 'self'; ` +
++        `object-src 'none'; ` +
++        `base-uri 'none'`
++    );
++    const filePath = path.join(__dirname, 'public', 'pages', 'index.html');
++    fs.readFile(filePath, 'utf8', (err, data) => {
++        if (err) {
++            console.error('Error reading file:', err);
++            return res.status(500).send('Error loading page');
++        }
++        // Add the nonce to the page's legitimate inline script.
++        const html = data.replace('<script>', `<script nonce="${nonce}">`);
++        res.send(html);
++    });
+ });
+ 
+ /**

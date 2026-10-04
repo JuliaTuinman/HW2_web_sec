@@ -1,0 +1,27 @@
+--- orig/app.js
++++ csp2/app.js
+@@ -9,6 +9,24 @@
+ app.use(bodyParser.json());
+ app.use('/static', express.static(__dirname + '/public'));
+ 
++// CSP 2.0 policy.
++// script-src 'self' (no 'unsafe-inline', no 'unsafe-eval') blocks the
++// injected inline <script>. style-src allows the Leaflet stylesheet from
++// unpkg plus our own CSS. connect-src 'self' stops the exfil fetch/beacon.
++app.use((req, res, next) => {
++    res.setHeader(
++        'Content-Security-Policy',
++        "default-src 'self'; " +
++        "script-src 'self'; " +
++        "style-src 'self' https://unpkg.com; " +
++        "img-src 'self' data:; " +
++        "connect-src 'self'; " +
++        "object-src 'none'; " +
++        "base-uri 'none'"
++    );
++    next();
++});
++
+ app.use((err, req, res, next) => {
+     process.exit(1);
+ });

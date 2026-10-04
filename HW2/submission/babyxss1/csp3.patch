@@ -1,0 +1,39 @@
+--- orig/app.js
++++ csp3/app.js
+@@ -2,6 +2,7 @@
+ const path = require('path');
+ const bodyParser = require('body-parser');
+ const fs = require('fs')
++const crypto = require('crypto');
+ const app = express();
+ const bot = require('./bot/bot');
+ 
+@@ -9,6 +10,28 @@
+ app.use(bodyParser.json());
+ app.use('/static', express.static(__dirname + '/public'));
+ 
++// CSP 3.0 (nonce-based) policy.
++// A fresh random nonce is generated for every response and placed in the
++// header. Only <script> tags that carry the matching nonce attribute will
++// execute. The attacker cannot predict the per-request nonce, so the
++// injected inline <script> is refused. 'strict-dynamic' lets a trusted
++// (nonce'd) script load further scripts if ever needed, and makes the
++// policy ignore host allowlists on modern browsers.
++app.use((req, res, next) => {
++    res.locals.nonce = crypto.randomBytes(16).toString('base64');
++    res.setHeader(
++        'Content-Security-Policy',
++        `default-src 'self'; ` +
++        `script-src 'nonce-${res.locals.nonce}' 'strict-dynamic'; ` +
++        `style-src 'self' https://unpkg.com; ` +
++        `img-src 'self' data:; ` +
++        `connect-src 'self'; ` +
++        `object-src 'none'; ` +
++        `base-uri 'none'`
++    );
++    next();
++});
++
+ app.use((err, req, res, next) => {
+     process.exit(1);
+ });

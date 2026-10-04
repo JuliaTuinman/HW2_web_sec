@@ -1,0 +1,26 @@
+--- orig/public/pages/index.html
++++ vuln/public/pages/index.html
+@@ -151,8 +151,21 @@
+         }
+ 
+         function safeRedirect(url) {
+-            if ((url.endsWith('apple.com') || url.endsWith('amazon.jobs') || url.endsWith('google.com') || url.endsWith('microsoft.com')) && !url.includes('flag')) {
+-                window.location.href = url;
++            // Parse the URL and validate BOTH the scheme and the exact host.
++            // This rejects javascript:/data: URLs (wrong protocol) and any
++            // host that merely "ends with" an allowed domain.
++            let parsed;
++            try { parsed = new URL(url); } catch (e) { parsed = null; }
++            const allowedHosts = [
++                'www.apple.com',
++                'www.amazon.jobs',
++                'careers.google.com',
++                'careers.microsoft.com'
++            ];
++            if (parsed &&
++                (parsed.protocol === 'https:' || parsed.protocol === 'http:') &&
++                allowedHosts.includes(parsed.hostname)) {
++                window.location.href = parsed.href;
+             } else {
+                 document.body.innerHTML = '<h1>Malicious URL detected</h1>';
+             }

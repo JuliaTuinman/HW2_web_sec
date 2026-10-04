@@ -1,0 +1,116 @@
+--- orig/app.js	2026-10-04
++++ csp2/app.js	2026-10-04 
+@@ -9,6 +9,25 @@
+ app.use(bodyParser.json());
+ app.use('/static', express.static(__dirname + '/public'));
+ 
++// CSP 2.0 policy.
++// script-src 'self' (no 'unsafe-inline', no 'unsafe-eval') means the browser
++// only runs scripts served from our own origin as external files. This blocks
++// the injected javascript: URL (inline execution is refused) while the
++// legitimate script, now moved to /static/js/app.js, still runs.
++app.use((req, res, next) => {
++    res.setHeader(
++        'Content-Security-Policy',
++        "default-src 'self'; " +
++        "script-src 'self'; " +
++        "style-src 'self' https://unpkg.com; " +
++        "img-src 'self' data:; " +
++        "connect-src 'self'; " +
++        "object-src 'none'; " +
++        "base-uri 'none'"
++    );
++    next();
++});
++
+ app.use((err, req, res, next) => {
+     process.exit(1);
+ });
+
+--- orig/static/js/app.js	
++++ csp2/static/js/app.js
+@@ -0,0 +1,35 @@
++document.getElementById('searchButton').addEventListener('click', function (event) {
++    event.preventDefault();
++    handleSearch();
++});
++document.getElementById('searchForm').addEventListener('submit', function (event) {
++    event.preventDefault();
++    handleSearch();
++});
++function handleSearch() {
++    const searchQuery = document.getElementById('searchInput').value;
++    fetch(`/search?q=${encodeURIComponent(searchQuery)}`)
++        .then(response => response.json())
++        .then(data => {
++            document.getElementById('searchResults').textContent = data.results;
++        })
++        .catch(error => {
++            console.error('Error:', error);
++        });
++}
++
++if (window.location.search) {
++    const url = new URL(window.location.href);
++    const redirect = url.searchParams.get('redirect');
++    if (redirect) {
++        safeRedirect(redirect);
++    }
++}
++
++function safeRedirect(url) {
++    if ((url.endsWith('apple.com') || url.endsWith('amazon.jobs') || url.endsWith('google.com') || url.endsWith('microsoft.com')) && !url.includes('flag')) {
++        window.location.href = url;
++    } else {
++        document.body.innerHTML = '<h1>Malicious URL detected</h1>';
++    }
++}
+
+--- orig/public/pages/index.html
++++ csp2/public/pages/index.html
+@@ -121,43 +121,9 @@
+         <p>Copyright &copy; 2025 Baltimore Job Search</p>
+     </footer>
+ 
+-    <script>
+-        document.getElementById('searchButton').addEventListener('click', function (event) {
+-            event.preventDefault();
+-            handleSearch();
+-        });
+-        document.getElementById('searchForm').addEventListener('submit', function (event) {
+-            event.preventDefault();
+-            handleSearch();
+-        });
+-        function handleSearch() {
+-            const searchQuery = document.getElementById('searchInput').value;
+-            fetch(`/search?q=${encodeURIComponent(searchQuery)}`)
+-                .then(response => response.json())
+-                .then(data => {
+-                    document.getElementById('searchResults').textContent = data.results;
+-                })
+-                .catch(error => {
+-                    console.error('Error:', error);
+-                });
+-        }
+-
+-        if (window.location.search) {
+-            const url = new URL(window.location.href);
+-            const redirect = url.searchParams.get('redirect');
+-            if (redirect) {
+-                safeRedirect(redirect);
+-            }
+-        }
+-
+-        function safeRedirect(url) {
+-            if ((url.endsWith('apple.com') || url.endsWith('amazon.jobs') || url.endsWith('google.com') || url.endsWith('microsoft.com')) && !url.includes('flag')) {
+-                window.location.href = url;
+-            } else {
+-                document.body.innerHTML = '<h1>Malicious URL detected</h1>';
+-            }
+-        }
+-    </script>
++    <!-- Inline script moved to an external file so CSP 'script-src self'
++         (no 'unsafe-inline') can be used. -->
++    <script src="/static/js/app.js"></script>
+ 
+ </body>

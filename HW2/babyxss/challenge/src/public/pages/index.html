@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baltimore Job Search</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="static/styles/main.css" />
+</head>
+
+<body>
+
+    <div id="navbar">
+        <a href="#">Home</a>
+        <a href="#">About</a>
+        <a href="#">Contact</a>
+    </div>
+
+    <!-- README Section -->
+    <div id="readmeSection">
+        <h2 style="text-align: center;">
+            Find a job in Baltimore!
+        </h2>
+        <!-- Search Bar -->
+        <div class="search-container">
+            <form id="searchForm" action="/" method="GET">
+                <input type="text" id="searchInput" name="q" placeholder="Search for jobs...">
+                <button type="submit" id="searchButton">Search</button>
+            </form>
+        </div>
+        <!-- Search Results -->
+        <div id="searchResults" class="search-results">
+            <!-- SERVER-SIDE-TEMPLATE-START -->
+            {% if searchQuery %}
+            <div class="search-result">
+                <h3>Search Results</h3>
+                <p>{{ searchQuery }}</p>
+            </div>
+            {% endif %}
+            <!-- SERVER-SIDE-TEMPLATE-END -->
+        </div>
+    </div>
+
+
+    <div id="content">
+        <div class="container">
+            <div id="job-listings">
+                <h2>Featured Job Listings</h2>
+                <p>Browse our latest job opportunities in Baltimore and surrounding areas.</p>
+
+                <div class="job-card">
+                    <h3>Security Engineer</h3>
+                    <p><strong>Location:</strong> Baltimore</p>
+                    <p><strong>Salary:</strong> $100,000 - $150,000</p>
+                    <p><strong>Type:</strong> Full-time</p>
+                </div>
+                
+                <div class="job-card">
+                    <h3>Software Engineer</h3>
+                    <p><strong>Location:</strong> Baltimore</p>
+                    <p><strong>Salary:</strong> $90,000 - $120,000</p>
+                    <p><strong>Type:</strong> Full-time</p>
+                </div>
+                
+                <div class="job-card">
+                    <h3>Marketing Manager</h3>
+                    <p><strong>Location:</strong> Baltimore</p>
+                    <p><strong>Salary:</strong> $75,000 - $95,000</p>
+                    <p><strong>Type:</strong> Full-time</p>
+                </div>
+                
+                <div class="job-card">
+                    <h3>Data Analyst</h3>
+                    <p><strong>Location:</strong> Remote (Baltimore-based company)</p>
+                    <p><strong>Salary:</strong> $65,000 - $85,000</p>
+                    <p><strong>Type:</strong> Full-time</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <!-- Job Submission Form Section -->
+    <div id="submission-section">
+        <div class="container">
+            <div class="input-container">
+                <h2>Help matching your dream job with our professional agents!</h2>
+                <!-- Your input form -->
+                <form id="locationForm" action="/submit" method="POST">
+                    <label for="id">Name:</label>
+                    <input type="text" id="id" name="id" placeholder="Jack" required>
+                    
+                    <label for="name">Job Title:</label>
+                    <input type="text" id="name" name="title" placeholder="Software Engineer" required>
+                    
+                    <label for="AQ">Expected Salary:</label>
+                    <input type="number" id="AQ" name="salary" placeholder="100000" required>
+            
+                    <label for="location">Preferred Location:</label>
+                    <input type="text" id="location" name="location" placeholder="Baltimore" required>
+            
+                    <label for="phone">Phone Number:</label>
+                    <input type="text" id="phone" name="phone" placeholder="123-456-7890" required>
+            
+                    <label for="url">Resume URL:</label>
+                    <input type="text" id="url" name="url" placeholder="https://example.com/resume" required>
+            
+                    <input type="submit" value="Submit">
+                </form>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>Copyright &copy; 2025 Baltimore Job Search</p>
+    </footer>
+
+</body>
+
+</html>

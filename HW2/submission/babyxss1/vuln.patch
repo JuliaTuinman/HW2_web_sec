@@ -1,0 +1,29 @@
+--- orig/app.js
++++ vuln/app.js
+@@ -13,6 +13,17 @@
+     process.exit(1);
+ });
+ 
++// Escape HTML special characters so user input cannot break out of its
++// text context and inject markup/scripts.
++function escapeHtml(unsafe) {
++    return String(unsafe)
++        .replace(/&/g, '&amp;')
++        .replace(/</g, '&lt;')
++        .replace(/>/g, '&gt;')
++        .replace(/"/g, '&quot;')
++        .replace(/'/g, '&#39;');
++}
++
+ /**
+  * Render the Job Hunting Page
+  */
+@@ -27,7 +38,7 @@
+         }
+         if ('q' in req.query) {
+         // Process the template
+-        const searchQuery = req.query.q;
++        const searchQuery = escapeHtml(req.query.q);
+         processedHtml = data.replace(
+             /<!-- SERVER-SIDE-TEMPLATE-START -->([\s\S]*?)<!-- SERVER-SIDE-TEMPLATE-END -->/,
+             `<!-- SERVER-SIDE-TEMPLATE-START -->
