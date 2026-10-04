@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  chatbot-ctf:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - ALLOWED_DOMAIN=pretty-chatbot.chal.secjhu.club
+      - XSS_BOT_URL=https://admin-bot.chal.secjhu.club
+    volumes:
+      - ./flag.txt:/app/flag.txt:ro
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_ADMIN  # Required for Puppeteer
+    tmpfs:
+      - /tmp:size=512M,noexec,nosuid,nodev
+    networks:
+      - ctf-network
+
+networks:
+  ctf-network:
+    driver: bridge
